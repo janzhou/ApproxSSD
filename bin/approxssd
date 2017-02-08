@@ -1,0 +1,46 @@
+#!/bin/bash
+
+get_sbt(){
+  [ ! -d 'target' ] && mkdir target
+  [ ! -f 'target/sbt' ] && cd target \
+  && wget https://raw.githubusercontent.com/paulp/sbt-extras/master/sbt \
+  && chmod 0755 sbt && cd ..
+}
+
+sbt(){
+  get_sbt
+  cmd="target/sbt $*"
+  echo $cmd
+  $cmd
+}
+
+build(){
+  sbt assembly
+}
+
+build.sbt(){
+  sbt assembly
+}
+
+jvm-opts(){
+    [ -f conf/jvm-opts ] && cat conf/jvm-opts || cat bin/jvm-opts
+}
+
+run(){
+    scalaDir="target/scala-2.11"
+    target=$(ls -t1 ${scalaDir}/nvmr-assembly-*.jar |  head -n 1)
+    testClass="${scalaDir}/test-classes"
+    cmd="java $(jvm-opts) -cp ${target}:${testClass} $*"
+    echo $cmd
+    $cmd
+}
+
+setup(){
+  run org.janzhou.nvmr.storage.Setup
+}
+
+WordCount(){
+  time run org.janzhou.nvmr.WordCountTest $*
+}
+
+$*
